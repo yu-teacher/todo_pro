@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스프링 부트 TODO 앱</title>
+  <link rel="stylesheet" href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css">
+  <style>
+    .completed {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+    .priority-high {
+        border-left: 5px solid #dc3545;
+    }
+    .priority-medium {
+        border-left: 5px solid #ffc107;
+    }
+    .priority-low {
+        border-left: 5px solid #28a745;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <h1 class="mb-4">Spring Boot TODO 애플리케이션</h1>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${successMessage}">
+    <span th:text="${successMessage}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
+  <!-- Todo Form -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>새 할일 추가</h5>
+    </div>
+    <div class="card-body">
+      <form th:action="@{/todos}" th:object="${todoDTO}" method="post">
+        <div class="mb-3">
+          <label for="title" class="form-label">제목</label>
+          <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="할일 제목">
+          <div class="text-danger" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">설명</label>
+          <textarea class="form-control" id="description" th:field="*{description}" rows="2" placeholder="할일 설명"></textarea>
+          <div class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+        </div>
+        <div class="mb-3">
+          <label for="priority" class="form-label">우선순위</label>
+          <select class="form-select" id="priority" th:field="*{priority}">
+            <option value="0">낮음</option>
+            <option value="1">중간</option>
+            <option value="2">높음</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">추가</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filter and Search -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="btn-group" role="group">
+        <a th:href="@{/todos}" th:classappend="${activeFilter == 'all'} ? 'active'" class="btn btn-outline-primary">전체</a>
+        <a th:href="@{/todos(filter='active')}" th:classappend="${activeFilter == 'active'} ? 'active'" class="btn btn-outline-primary">미완료</a>
+        <a th:href="@{/todos(filter='completed')}" th:classappend="${activeFilter == 'completed'} ? 'active'" class="btn btn-outline-primary">완료</a>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <form th:action="@{/todos/search}" method="get" class="d-flex">
+        <input class="form-control me-2" type="search" placeholder="검색" name="keyword" th:value="${keyword}">
+        <button class="btn btn-outline-success" type="submit">검색</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Todo List -->
+  <div class="card">
+    <div class="card-header">
+      <h5>할일 목록</h5>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info" th:if="${todos.empty}">
+        등록된 할일이 없습니다.
+      </div>
+      <ul class="list-group">
+        <li th:each="todo : ${todos}"
+            th:class="${'list-group-item d-flex justify-content-between align-items-center ' +
+                                  (todo.completed ? 'completed ' : '') +
+                                  (todo.priority == 2 ? 'priority-high' :
+                                   todo.priority == 1 ? 'priority-medium' : 'priority-low')}">
+          <div>
+            <h5 th:text="${todo.title}" th:class="${todo.completed ? 'completed' : ''}"></h5>
+            <p th:if="${todo.description}" th:text="${todo.description}" class="mb-1"></p>
+            <small class="text-muted">
+              생성: <span th:text="${#temporals.format(todo.createdAt, 'yyyy-MM-dd HH:mm')}"></span> |
+              우선순위: <span th:text="${todo.priority == 2 ? '높음' : todo.priority == 1 ? '중간' : '낮음'}"></span>
+            </small>
+          </div>
+          <div class="d-flex">
+            <a th:href="@{/todos/toggle/{id}(id=${todo.id})}" class="btn btn-sm me-1"
+               th:classappend="${todo.completed ? 'btn-secondary' : 'btn-success'}">
+              <span th:text="${todo.completed ? '미완료로 표시' : '완료로 표시'}"></span>
+            </a>
+            <a th:href="@{/todos/edit/{id}(id=${todo.id})}" class="btn btn-sm btn-warning me-1">수정</a>
+            <a th:href="@{/todos/delete/{id}(id=${todo.id})}" class="btn btn-sm btn-danger"
+               onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script src="/webjars/jquery/3.6.4/jquery.min.js"></script>
+<script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
